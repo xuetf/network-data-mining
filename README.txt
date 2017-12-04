@@ -1,16 +1,26 @@
-ÀàËµÃ÷£º
-message_classcifier.py: ×ÜµÄÔËĞĞÖ÷Àà
-util.py:±£´æÖĞ¼äÊı¾İµÄ·½·¨
+ç±»è¯´æ˜ï¼š
+message_classcifier.py: çŸ­ä¿¡åˆ†ç±»æ€»çš„è¿è¡Œä¸»ç±»
+util.py:çŸ­ä¿¡åˆ†ç±»å·¥å…·ç±»ï¼šä¿å­˜ä¸­é—´æ•°æ®çš„æ–¹æ³•
 
-dataÎÄ¼ş¼Ğ£º
-short_message.txt:ÀÏÊ¦¸øµÄ´ø±êÇ©¶ÌĞÅÑµÁ·Êı¾İ
-no_label_short_message.txt:ÀÏÊ¦¸øµÄÎŞ±êÇ©¶ÌĞÅ²âÊÔ¼¯Êı¾İ
-no_label_short_message.pred_result.txt:Ä£ĞÍ¶ÔÎŞ±êÇ©¶ÌĞÅµÄÔ¤²â½á¹û
-
-saveÎÄ¼ş¼Ğ£º±£´æÖĞ¼ä¹ı³ÌÊı¾İ¡£
+news_recommend.ipynb:æ–°é—»æ¨èã€‚ipython notebookæ ¼å¼ï¼Œåªå®ç°äº†æ–°é—»ç›¸ä¼¼åº¦è®¡ç®—ï¼Œ
+ä½¿ç”¨çš„æ˜¯gensimåŒ…ï¼Œå¹¶åŸºäºItem-Itemæ–¹å¼ç»™å‡ºå•ä¸ªç”¨æˆ·æ¨èã€‚è¿™é‡Œé¢å¤„ç†èµ·æ¥ç»†èŠ‚å¥½å¤šï¼Œè®¡ç®—é‡å¤ªå¤§ã€‚
+è¯„ä»·æŒ‡æ ‡è¿˜æ²¡æœ‰æ„å»ºã€‚å‘å¤ªå¤šã€‚æœ€ç»ˆç»“æœä¸ä¸€å®šå¥½ã€‚
 
 
-ÔËĞĞ½á¹û£º
+
+
+
+dataæ–‡ä»¶å¤¹ï¼š
+
+short_message.txt:è€å¸ˆç»™çš„å¸¦æ ‡ç­¾çŸ­ä¿¡è®­ç»ƒæ•°æ®
+no_label_short_message.txt:è€å¸ˆç»™çš„æ— æ ‡ç­¾çŸ­ä¿¡æµ‹è¯•é›†æ•°æ®
+no_label_short_message.pred_result.txt:æ¨¡å‹å¯¹æ— æ ‡ç­¾çŸ­ä¿¡çš„é¢„æµ‹ç»“æœ
+saveæ–‡ä»¶å¤¹ï¼šä¿å­˜ä¸­é—´è¿‡ç¨‹æ•°æ®ã€‚
+
+
+
+
+çŸ­ä¿¡åˆ†ç±»è¿è¡Œç»“æœï¼š
 D:\Anaconda2\python.exe F:/py-workspace/network-data-mining/message_classcifier.py
 LogisticRegression:..........
 train on 322880 instances
