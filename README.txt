@@ -1,3 +1,16 @@
+类说明：
+message_classcifier.py: 总的运行主类
+util.py:保存中间数据的方法
+
+data文件夹：
+short_message.txt:老师给的带标签短信训练数据
+no_label_short_message.txt:老师给的无标签短信测试集数据
+no_label_short_message.pred_result.txt:模型对无标签短信的预测结果
+
+save文件夹：保存中间过程数据。
+
+
+运行结果：
 D:\Anaconda2\python.exe F:/py-workspace/network-data-mining/message_classcifier.py
 LogisticRegression:..........
 train on 322880 instances
