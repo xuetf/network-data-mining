@@ -16,7 +16,7 @@ from nltk.classify import NaiveBayesClassifier
 from nltk.classify.scikitlearn import SklearnClassifier
 from sklearn.naive_bayes import MultinomialNB, BernoulliNB
 from sklearn.linear_model import LogisticRegression
-
+from sklearn.model_selection import StratifiedKFold
 dir_path = "data/save"
 pos, neg = 0, 1
 
@@ -24,8 +24,8 @@ pos, neg = 0, 1
 class Message_Classcifier(object):
     def __init__(self):
         ''
-    def cut_messages(self, messages, name=None, is_test_mode=False):
-        if (not is_test_mode) and is_exist_file(dir_path, name):
+    def cut_messages(self, messages, name=None, is_load_from_file=True):
+        if is_load_from_file and is_exist_file(dir_path, name):
             return load_from_pickle(dir_path, name)
 
         cut_messages_list = []
@@ -35,16 +35,16 @@ class Message_Classcifier(object):
             fenci = jieba.cut(s[0], cut_all=False)  # False默认值：精准模式
             valid_words = list(set(fenci) - set(stop))
             cut_messages_list.append(valid_words)
-        if not is_test_mode:
-            dump_to_pickle(dir_path, name, cut_messages_list)
+
+        if is_load_from_file: dump_to_pickle(dir_path, name, cut_messages_list)
         return cut_messages_list
 
     # 获取信息量最高(前number个)的特征(卡方统计)
-    def chi_features(self, number, pos_messages, neg_messages):
-        if is_exist_file(dir_path, 'chi_features'):
-            selected_features = load_from_pickle(dir_path, 'chi_features')
-            self.selected_features = selected_features
-            return
+    def chi_features(self, number, pos_messages, neg_messages, is_load_from_file=True):
+        if is_load_from_file and is_exist_file(dir_path, 'chi_features'):
+            best_features = load_from_pickle(dir_path, 'chi_features')
+            return best_features
+
         pos_words = np.concatenate(pos_messages)  ##集合的集合展平成一个集合
         neg_words = np.concatenate(neg_messages)
 
@@ -82,8 +82,8 @@ class Message_Classcifier(object):
 
         best_words = set([w for w, s in best_vals])
         best_features = dict([(word, True) for word in best_words])
-        dump_to_pickle(dir_path, 'chi_features', best_features)
-        self.selected_features = best_features
+        if is_load_from_file: dump_to_pickle(dir_path, 'chi_features', best_features)
+        return  best_features
 
 
 
@@ -100,31 +100,45 @@ class Message_Classcifier(object):
                 vec.append([a, tag])
         return vec
 
-    def fit(self, train_data, classifier, n=250):
-        # pre_process
-        if os.path.isfile('pos_feature.pickle') and os.path.isfile('neg_feature.pickle'):
-            self.train_features = load_from_pickle(dir_path, 'train_features')
+    def get_train_features(self,pos_messages, neg_messages, is_load_from_file=True):
+        if is_load_from_file and is_exist_file(dir_path, 'train_features'): # 模型特征是否已经保存过
+            train_features = load_from_pickle(dir_path, 'train_features')
         else:
-            # 分词
-            pos_messages = self.cut_messages(train_data[train_data['label'] == pos]['message'], 'train_cut_pos_messages')
-            neg_messages = self.cut_messages(train_data[train_data['label'] == neg]['message'], 'train_cut_neg_messages')
-            # 卡方统计返回区分度好的特征
-            self.chi_features(n, pos_messages, neg_messages)
-            # 单词转特征
-            pos_features =  self.word2vec(pos_messages, pos)
+            pos_features = self.word2vec(pos_messages, pos)
             neg_features = self.word2vec(neg_messages, neg)
-            # 保存特征
-            train_features =  np.concatenate([pos_features, neg_features])
-            dump_to_pickle(dir_path, 'train_features', train_features)
-            self.train_features = train_features
+            train_features = np.concatenate([pos_features, neg_features])
+            if is_load_from_file: dump_to_pickle(dir_path, 'train_features', train_features)
+        return train_features
 
+    def fit(self, train_data, classifier, n=250, is_load_from_file=False, model_name=None, is_need_cut=True):
+        if is_need_cut: # 是否需要分词
+            pos_messages = self.cut_messages(train_data[train_data['label'] == pos]['message'], 'train_cut_pos_messages', is_load_from_file)
+            neg_messages = self.cut_messages(train_data[train_data['label'] == neg]['message'], 'train_cut_neg_messages', is_load_from_file)
+        else: # 不需要分词，说明已经分词好了
+            pos_messages = train_data[train_data['label'] == pos]['message'].values
+            neg_messages = train_data[train_data['label'] == neg]['message'].values
+
+        # 卡方统计返回区分度好的特征,测试的时候需要筛选
+        self.selected_features = self.chi_features(n, pos_messages, neg_messages, is_load_from_file)
+
+        # 保存过模型则直接加载，不需要下面的训练
+        if is_load_from_file and is_exist_file(dir_path, model_name):
+            self.classifier = load_from_pickle(dir_path, model_name)
+            return self
+
+        train_features = self.get_train_features(pos_messages, neg_messages, is_load_from_file)
         self.classifier = SklearnClassifier(classifier)  # 在nltk中使用scikit-learn的接口
-        self.classifier.train(self.train_features)  # 训练分类器. train_features中包含着类别
-        print 'train on %d instances' % (len(self.train_features))
+        self.classifier.train(train_features)  # 训练分类器. train_features中包含着类别
+        if is_load_from_file: dump_to_pickle(dir_path, model_name, self.classifier)
+        print 'train on %d instances' % (len(train_features))
         return self
 
-    def predict(self, test_x):
-        test_messages = self.cut_messages(test_x, is_test_mode=True) # 分词
+    def predict(self, test_x, is_validate=False, is_need_cut=True):
+        if is_need_cut:
+            name = 'validate_cut_messages' if is_validate else 'test_cut_messages'
+            test_messages = self.cut_messages(test_x, name = name, is_load_from_file=True) # 分词
+        else:
+            test_messages = test_x
         test_features = self.word2vec(test_messages, is_test_mode=True) # 词语转特征
         print 'test on %d instances' % (len(test_features))
         return self.classifier.classify_many(test_features)
@@ -149,11 +163,30 @@ class Message_Classcifier(object):
         print 'neg f1 score', neg_f1score
 
         print precision_recall_fscore_support(label_true, label_pred, pos_label=pos)
+        return all_accuracy, pos_precision, pos_recall, pos_f1score, neg_precision, neg_recall, neg_f1score
+
+def cross_validate_score(data, k_fold=5):
+    clf = Message_Classcifier()
+    data['message'] = clf.cut_messages(data['message'], is_load_from_file=True, name='all_messages_cut') #统一切词
+    data_x, data_y = data['message'], data['label']
+    kf = StratifiedKFold(n_splits=k_fold, shuffle=True, random_state=1)
+    result = []
+    for i, (train_index, validate_index) in enumerate(kf.split(data_x, data_y)):  # 会按照样本类别比例划分
+        print 'fold %d start......' % i
+        train_data = data.ix[train_index] # 包含标签
+        validate_x = data_x.ix[validate_index]
+        validate_y = data_y.ix[validate_index]
+        clf.fit(train_data, LogisticRegression(), is_load_from_file=False, is_need_cut=False)
+        pred_y = clf.predict(validate_x, is_need_cut=False)
+        result.append(clf.acc_precision_recall_score(validate_y, pred_y))
+    print result
+    print 'average accuracy | pos: precision, recall,f1_score | neg: precision,recall,f1_score'
+    print np.mean(result, axis=0)
+
 
 
 if __name__ == '__main__':
     data = pd.read_csv('data/short_message.txt', names=['label', 'message'], sep='\t')
-
 
     # 划分数据 训练集:验证集 = 3 : 1, 按类别比例划分。
     pos_data = data[data['label'] == pos]
@@ -161,15 +194,15 @@ if __name__ == '__main__':
     posCutoff = int(math.floor(len(pos_data) * 3 / 4))
     negCutoff = int(math.floor(len(neg_data) * 3 / 4))
     train_data = pd.concat([pos_data[:posCutoff], neg_data[:negCutoff]], ignore_index=True)# 3/4训练
-    test_data = pd.concat([pos_data[posCutoff:], neg_data[negCutoff:]], ignore_index=True) # 1/4测试
-    test_x, test_y = test_data['message'], test_data['label']
+    validate_data = pd.concat([pos_data[posCutoff:], neg_data[negCutoff:]], ignore_index=True) # 1/4测试
+    validate_x, validate_y = validate_data['message'], validate_data['label']
 
     # 使用逻辑回归训练
     clf = Message_Classcifier()
     print 'LogisticRegression:..........'
-    clf.fit(train_data, LogisticRegression())  # 获得训练数据
-    pred_y = clf.predict(test_x)
-    clf.acc_precision_recall_score(test_y, pred_y)
+    clf.fit(train_data, LogisticRegression(), is_load_from_file=True, model_name='logistic_regression_model')  # 获得训练数据
+    pred_y = clf.predict(validate_x, is_validate=True, is_need_cut=True)
+    clf.acc_precision_recall_score(validate_y, pred_y)
 
     # 预测不带标签短信
     to_predict_data = pd.read_csv('data/no_label_short_message.txt', names=['message'], sep='\t')
@@ -177,3 +210,6 @@ if __name__ == '__main__':
     pred_y = clf.predict(to_predict_data['message'])
     to_predict_data['pred_label'] = pred_y
     to_predict_data.to_csv('data/no_label_short_message_pred_result.txt', sep='\t', index=False, header=None)
+
+    # 交叉验证
+    # cross_validate_score(data, k_fold=5)

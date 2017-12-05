@@ -15,10 +15,11 @@ data文件夹：
 short_message.txt:老师给的带标签短信训练数据
 no_label_short_message.txt:老师给的无标签短信测试集数据
 no_label_short_message.pred_result.txt:模型对无标签短信的预测结果
-save文件夹：保存中间过程数据。
+save文件夹：保存中间过程数据。若数据有误，请删除重新跑模型
 
-
-
+五折交叉验证结果：
+ accuracy | pos: precision, recall,  f1_score | neg: precision, recall,    f1_score
+[ 0.99163137  0.99269145  0.99804965  0.99536333  0.98154793  0.93386154   0.95711039]
 
 短信分类运行结果：
 D:\Anaconda2\python.exe F:/py-workspace/network-data-mining/message_classcifier.py
