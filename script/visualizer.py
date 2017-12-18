@@ -79,7 +79,7 @@ def plot_learning_curve(estimator, title, X, y, ylim=None, cv=None,
 
 def plot_validation_curve(estimator,title, X, y,
                           param_name, param_range, param_plot_range,
-                          x_ticks=np.arange(1.0,2.1,0.1), y_ticks=np.arange(0.95, 0.98, 0.001), cv=None, scoring='f1'):
+                          x_ticks=np.arange(1.00, 2.10, 0.1), y_ticks=np.arange(0.96, 0.97, 0.001), cv=None, scoring='f1'):
     train_scores, test_scores = validation_curve(
         estimator, X, y, param_name=param_name, param_range=param_range,
         cv=cv, scoring=scoring, n_jobs=1)
@@ -93,8 +93,7 @@ def plot_validation_curve(estimator,title, X, y,
     plt.title(title)
     plt.xlabel(param_name)
     plt.ylabel("%s Score" %scoring)
-    plt.set_yticks(y_ticks)
-    plt.set_xticks(x_ticks)
+
 
     plt.semilogx(param_plot_range, train_scores_mean, label="Training score",
                  color="r")
@@ -106,5 +105,9 @@ def plot_validation_curve(estimator,title, X, y,
     plt.fill_between(param_plot_range, test_scores_mean - test_scores_std,
                      test_scores_mean + test_scores_std, alpha=0.2,
                      color="b")
+    plt.yticks(y_ticks)
+    plt.xticks(x_ticks,rotation=90)
     plt.legend(loc="best")
     plt.show()
+
+
