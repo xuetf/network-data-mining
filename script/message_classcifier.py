@@ -72,9 +72,10 @@ def cross_validate_score(data, k_fold=5, model=LogisticRegression()):
     print 'average score over %d fold cross data' % k_fold
     print 'accuracy | pos: precision, recall, f1_score | neg: precision, recall, f1_score'
     result = np.mean(result, axis=0)
+    print result
     return result[-1] # f1_score of neg class
 
-def learning_curve(data, model, classifier_name, n, is_need_cut, is_load_from_file, train_feature_name,
+def learning_curve(data, model, classifier_name, n, is_need_cut=False, is_load_from_file=False, train_feature_name=all_train_features_name,
                    cv=5, train_sizes=np.linspace(.1, 1.0, 10), ylim=(0.8, 1.1), baseline=0.9):
     _, data_features = fit_preprocess(train_data=data, is_need_cut=is_need_cut, n=n,
                                         is_load_from_file=is_load_from_file, train_feature_name=train_feature_name)
@@ -82,8 +83,19 @@ def learning_curve(data, model, classifier_name, n, is_need_cut, is_load_from_fi
     plot_learning_curve(model, classifier_name, X=X, y=y, ylim=ylim, cv=cv,
                         train_sizes=train_sizes, baseline=baseline)
 
-def adjust_parameter_validate_curve(data):
-    pass
+def adjust_parameter_validate_curve(data, model, model_name,
+                                    n=1000, is_need_cut=False, is_load_from_file=False, train_feature_name=all_train_features_name, cv=5,
+                                    y_ticks=(0.95, 1.0)):
+    _, data_features = fit_preprocess(train_data=data, is_need_cut=is_need_cut, n=n,
+                                      is_load_from_file=is_load_from_file, train_feature_name=train_feature_name)
+    X, y = transform_features(data_features)
+
+    param_name = 'class_weight'
+    param_plot_range = np.arange(1, 2.1, 0.1)
+    param_range = [{pos:1.0, neg:neg_class_weight} for neg_class_weight in param_plot_range]
+    plot_validation_curve(model, model_name, X=X, y=y, param_name=param_name, param_range=param_range, param_plot_range=param_plot_range,
+                          cv=cv)
+
 
 def train_all_and_predict_no_label_data(data):
     print 'cut finished.........................'
@@ -117,12 +129,11 @@ if __name__ == '__main__':
     # cross_validate_score(data, k_fold=5, model=LogisticRegression(class_weight={pos:1, neg:1.5}))
 
     # 交叉验证绘制学习曲线
-    learning_curve(data, LogisticRegression(class_weight={pos:1, neg:1.5}), 'LogisticRegression',n=1000,
-            is_need_cut=False,is_load_from_file=False, train_feature_name=all_train_features_name,
-                   train_sizes=np.linspace(.01, 1.0, 10))
+    # learning_curve(data, LogisticRegression(class_weight={pos:1, neg:1.5}), 'LogisticRegression',n=1000,
+    #                          train_sizes=np.linspace(.01, 1.0, 10))
 
     # 最终在所有训练集上训练，并预测不带标签数据
     # train_all_and_predict_no_label_data(data)
 
     # 调参
-    # adjust_parameters_cross_validate_score()
+    adjust_parameter_validate_curve(data, LogisticRegression(), 'LogisticRegression Validation')

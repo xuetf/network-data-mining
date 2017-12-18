@@ -8,7 +8,7 @@ import numpy as np
 from feature_extraction import *
 from sklearn.feature_extraction import DictVectorizer
 from sklearn.preprocessing import LabelEncoder
-from nltk import compat
+
 
 def cut_messages(messages, name=None, is_load_from_file=True):
     if is_load_from_file and is_exist_file(dir_path, name):
@@ -69,7 +69,7 @@ def fit_preprocess(train_data, n, is_need_cut, is_load_from_file, train_feature_
     return selected_features, train_features
 
 def transform_features(data_features):
-    X, y = list(compat.izip(*data_features))
+    X, y = list(zip(*data_features))
     X = DictVectorizer(sparse=True, dtype=float).fit_transform(X)
     y = LabelEncoder().fit_transform(y)
     return X, y

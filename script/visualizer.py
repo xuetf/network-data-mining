@@ -3,6 +3,11 @@ from os import path
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import learning_curve
+from sklearn.model_selection import validation_curve
+import numpy as np
+from constant import *
+from sklearn.utils import shuffle
 
 def plot_word_cloud(best_words):
     best_words = dict(best_words)
@@ -16,9 +21,7 @@ def plot_word_cloud(best_words):
     plt.show()
 
 # plot_word_cloud({u'你好':100, u'我们':200,u'啊啊':30})
-from sklearn.model_selection import learning_curve
-import numpy as np
-from sklearn.utils import shuffle
+
 def plot_learning_curve(estimator, title, X, y, ylim=None, cv=None,
                         train_sizes=np.linspace(.1, 1.0, 5), baseline=None, scoring='f1'):
     """
@@ -72,4 +75,36 @@ def plot_learning_curve(estimator, title, X, y, ylim=None, cv=None,
     if ylim:
         plt.ylim(ylim)
     plt.title(title)
+    plt.show()
+
+def plot_validation_curve(estimator,title, X, y,
+                          param_name, param_range, param_plot_range,
+                          x_ticks=np.arange(1.0,2.1,0.1), y_ticks=np.arange(0.95, 0.98, 0.001), cv=None, scoring='f1'):
+    train_scores, test_scores = validation_curve(
+        estimator, X, y, param_name=param_name, param_range=param_range,
+        cv=cv, scoring=scoring, n_jobs=1)
+
+    train_scores_mean = np.mean(train_scores, axis=1)
+    train_scores_std = np.std(train_scores, axis=1)
+    test_scores_mean = np.mean(test_scores, axis=1)
+    test_scores_std = np.std(test_scores, axis=1)
+    print train_scores_mean
+    print test_scores_mean
+    plt.title(title)
+    plt.xlabel(param_name)
+    plt.ylabel("%s Score" %scoring)
+    plt.set_yticks(y_ticks)
+    plt.set_xticks(x_ticks)
+
+    plt.semilogx(param_plot_range, train_scores_mean, label="Training score",
+                 color="r")
+    plt.fill_between(param_plot_range, train_scores_mean - train_scores_std,
+                     train_scores_mean + train_scores_std, alpha=0.2,
+                     color="r")
+    plt.semilogx(param_plot_range, test_scores_mean, label="Cross-validation score",
+                 color="b")
+    plt.fill_between(param_plot_range, test_scores_mean - test_scores_std,
+                     test_scores_mean + test_scores_std, alpha=0.2,
+                     color="b")
+    plt.legend(loc="best")
     plt.show()
