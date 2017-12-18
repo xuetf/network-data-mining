@@ -6,8 +6,13 @@ from sklearn.model_selection import StratifiedKFold
 from sklearn.model_selection import learning_curve
 from sklearn.model_selection import validation_curve
 import numpy as np
+from scipy import interp
+from sklearn.metrics import roc_curve, auc
 from constant import *
 from sklearn.utils import shuffle
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import precision_recall_curve
+
 
 def plot_word_cloud(best_words):
     best_words = dict(best_words)
@@ -80,9 +85,10 @@ def plot_learning_curve(estimator, title, X, y, ylim=None, cv=None,
 def plot_validation_curve(estimator,title, X, y,
                           param_name, param_range, param_plot_range,
                           x_ticks=np.arange(1.00, 2.10, 0.1), y_ticks=np.arange(0.96, 0.97, 0.001), cv=None, scoring='f1'):
+    kf = StratifiedKFold(n_splits=cv, shuffle=True, random_state=1)  # 固定种子
     train_scores, test_scores = validation_curve(
         estimator, X, y, param_name=param_name, param_range=param_range,
-        cv=cv, scoring=scoring, n_jobs=1)
+        cv=kf, scoring=scoring, n_jobs=1)
     plt.figure()
 
     train_scores_mean = np.mean(train_scores, axis=1)
@@ -108,9 +114,31 @@ def plot_validation_curve(estimator,title, X, y,
                      color="b")
     plt.yticks(y_ticks)
     plt.xticks(x_ticks,rotation=90)
+    plt.xlim((0, 2.0))
     import matplotlib.ticker as ticker
     plt.gca().xaxis.set_major_formatter(ticker.FormatStrFormatter('%.2f'))
     plt.legend(loc="best")
     plt.show()
 
+def plot_precision_recall_curve(classifier, X, y):
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.5, random_state=1) # Use the first fold to draw the curve
+    # Create a simple classifier
+    classifier.fit(X_train, y_train)
+    y_score = classifier.decision_function(X_test)
+    from sklearn.metrics import average_precision_score
+    average_precision = average_precision_score(y_test, y_score)
+    # print('Average precision-recall score: {0:0.2f}'.format(
+    #     average_precision))
+    precision, recall, _ = precision_recall_curve(y_test, y_score, pos_label=1)
+    plt.step(recall, precision, color='b', alpha=0.2,
+             where='post')
+    plt.fill_between(recall, precision, step='post', alpha=0.2,
+                     color='b')
+
+    plt.xlabel('Recall')
+    plt.ylabel('Precision')
+    plt.ylim([0.0, 1.05])
+    plt.xlim([0.0, 1.0])
+    plt.title('Precision-Recall curve of neg message')
+    plt.show()
 

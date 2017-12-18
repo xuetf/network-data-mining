@@ -84,8 +84,7 @@ def learning_curve(data, model, classifier_name, n, is_need_cut=False, is_load_f
                         train_sizes=train_sizes, baseline=baseline)
 
 def adjust_parameter_validate_curve(data, model, model_name,
-                                    n=1000, is_need_cut=False, is_load_from_file=False, train_feature_name=all_train_features_name, cv=5,
-                                    y_ticks=(0.95, 1.0)):
+                                    n=1000, is_need_cut=False, is_load_from_file=False, train_feature_name=all_train_features_name, cv=5,):
     _, data_features = fit_preprocess(train_data=data, is_need_cut=is_need_cut, n=n,
                                       is_load_from_file=is_load_from_file, train_feature_name=train_feature_name)
     X, y = transform_features(data_features)
@@ -108,17 +107,13 @@ def train_all_and_predict_no_label_data(data):
     to_predict_data[pred_label_name] = pred_y
     to_predict_data.to_csv(no_label_short_message_pred_result_path, sep='\t', index=False, header=None)
 
-def adjust_parameters_cross_validate_score():
-    neg_class_weights = np.arange(1, 2, 0.1)
-    f1_result = []
-    for neg_class_weight in neg_class_weights:
-        f1_result.append(cross_validate_score(k_fold=5, model=LogisticRegression(class_weight={pos:1, neg:neg_class_weight})))
-    plt.plot(neg_class_weights, f1_result, 'o-')
-    plt.xlabel('class weight of neg_class/pos_class')
-    plt.ylabel('f1 score of neg class')
-    plt.title("Class Weight Parameters Search Through Corss Validation")
-    plt.show()
 
+def precision_recall_curve(data, model,
+                                    n=1000, is_need_cut=False, is_load_from_file=False, train_feature_name=all_train_features_name, cv=5):
+    _, data_features = fit_preprocess(train_data=data, is_need_cut=is_need_cut, n=n,
+                                      is_load_from_file=is_load_from_file, train_feature_name=train_feature_name)
+    X, y = transform_features(data_features)
+    plot_precision_recall_curve(model, X, y)
 
 
 if __name__ == '__main__':
@@ -126,14 +121,20 @@ if __name__ == '__main__':
     data[message_name] = cut_messages(data[message_name], is_load_from_file=True, name=all_word_cut_name)  # 统一切词
 
     # 交叉验证
-    # cross_validate_score(data, k_fold=5, model=LogisticRegression(class_weight={pos:1, neg:1.5}))
+    cross_validate_score(data, k_fold=5, model=LogisticRegression(class_weight={pos:1, neg:1.7}))
+
 
     # 交叉验证绘制学习曲线
     # learning_curve(data, LogisticRegression(class_weight={pos:1, neg:1.5}), 'LogisticRegression',n=1000,
     #                          train_sizes=np.linspace(.01, 1.0, 10))
 
+    # 绘制precision_recall曲线
+    # precision_recall_curve(data, LogisticRegression(class_weight={pos: 1, neg: 1.7}))
+
     # 最终在所有训练集上训练，并预测不带标签数据
     # train_all_and_predict_no_label_data(data)
 
     # 调参
-    adjust_parameter_validate_curve(data, LogisticRegression(), 'LogisticRegression Validation')
+    # adjust_parameter_validate_curve(data, LogisticRegression(), 'LogisticRegression Validation')
+
+
