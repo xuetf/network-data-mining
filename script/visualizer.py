@@ -46,10 +46,10 @@ def plot_learning_curve(estimator, title, X, y, ylim=None, cv=None,
         sklearn.cross_validation module for the list of possible objects
     """
 
-    X, y = shuffle(X, y) # important for logistic because of the para
+    #X, y = shuffle(X, y) # important for logistic because of the para
     plt.figure()
     train_sizes, train_scores, test_scores = learning_curve(
-        estimator, X, y, cv = cv, train_sizes=train_sizes, scoring=scoring) # 垃圾短信neg=1的f1 score
+        estimator, X, y, cv = cv, train_sizes=train_sizes, scoring=scoring,n_jobs=1) # 垃圾短信neg=1的f1 score
     print train_sizes
     print '-------------'
     print train_scores
@@ -83,6 +83,7 @@ def plot_validation_curve(estimator,title, X, y,
     train_scores, test_scores = validation_curve(
         estimator, X, y, param_name=param_name, param_range=param_range,
         cv=cv, scoring=scoring, n_jobs=1)
+    plt.figure()
 
     train_scores_mean = np.mean(train_scores, axis=1)
     train_scores_std = np.std(train_scores, axis=1)
@@ -107,6 +108,8 @@ def plot_validation_curve(estimator,title, X, y,
                      color="b")
     plt.yticks(y_ticks)
     plt.xticks(x_ticks,rotation=90)
+    import matplotlib.ticker as ticker
+    plt.gca().xaxis.set_major_formatter(ticker.FormatStrFormatter('%.2f'))
     plt.legend(loc="best")
     plt.show()
 
