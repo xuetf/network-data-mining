@@ -5,7 +5,7 @@ constant definition
 data_root_path = '../data/'
 #  save path
 dir_path = data_root_path + "save"
-all_word_cut_name = "all_messages_cut_tmp"
+all_word_cut_name = "all_messages_cut"
 chi_feature_name = 'chi_features'
 stop_path = data_root_path + 'stop.txt'
 

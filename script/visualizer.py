@@ -51,12 +51,12 @@ def plot_learning_curve(estimator, title, X, y, ylim=None, cv=None,
         sklearn.cross_validation module for the list of possible objects
     """
 
-    #X, y = shuffle(X, y) # important for logistic because of the para
+    X, y = shuffle(X, y) # important for logistic because of the parallel modeling
     plt.figure()
     train_sizes, train_scores, test_scores = learning_curve(
-        estimator, X, y, cv = cv, train_sizes=train_sizes, scoring=scoring,n_jobs=1) # 垃圾短信neg=1的f1 score
-    print train_sizes
-    print '-------------'
+        estimator, X, y, cv = cv, train_sizes=train_sizes, scoring=scoring, n_jobs=1) # 垃圾短信neg=1的f1 score
+
+    print 'cross f1 scores of different training size:'
     print train_scores
     train_scores_mean = np.mean(train_scores, axis=1)
     train_scores_std = np.std(train_scores, axis=1)
@@ -95,7 +95,6 @@ def plot_validation_curve(estimator,title, X, y,
     train_scores_std = np.std(train_scores, axis=1)
     test_scores_mean = np.mean(test_scores, axis=1)
     test_scores_std = np.std(test_scores, axis=1)
-    print train_scores_mean
     print test_scores_mean
     plt.title(title)
     plt.xlabel(param_name)
@@ -119,6 +118,7 @@ def plot_validation_curve(estimator,title, X, y,
     plt.gca().xaxis.set_major_formatter(ticker.FormatStrFormatter('%.2f'))
     plt.legend(loc="best")
     plt.show()
+    return param_plot_range[np.argmax(test_scores_mean)]
 
 def plot_precision_recall_curve(classifier, X, y):
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.5, random_state=1) # Use the first fold to draw the curve

@@ -17,21 +17,31 @@ from score import *
 class Message_Classcifier(object):
     def __init__(self):
         pass
-    def load_model(self, model_name):
-        self.classifier = load_from_pickle(dir_path, model_name)
+    def load_model(self, model_file_name):
+        self.classifier = load_from_pickle(dir_path, model_file_name)
         self.selected_features = load_from_pickle(dir_path, chi_feature_name)
         return self
 
-
-
-    def fit(self, train_data, classifier, n=250, is_load_from_file=False, model_name=None, select_feature_name=chi_feature_name, is_need_cut=True, train_feature_name=None):
+    def fit(self, train_data, classifier, n=250, is_load_from_file=False,
+            model_file_name=None, select_feature_file_name=chi_feature_name, is_need_cut=True, train_feature_file_name=None):
+        '''
+        :param train_data:  训练数据，包含标签
+        :param classifier:  使用的分类模型
+        :param n: 抽取的特征数量
+        :param is_load_from_file: 是否从文件中加载模型
+        :param model_file_name: 若is_load_from_file=True,model_file_name是保存的模型的文件名
+        :param select_feature_file_name: 若is_load_from_file=True，select_feature_file_name是保存的抽取的特征的文件名，用于下述构建短信-特征矩阵
+        :param is_need_cut: 是否需要进行分词处理
+        :param train_feature_file_name: 使用布尔模型或VSM模型构建的短信-特征矩阵所保存的文件名，非None说明从文件中加载
+        :return: 模型本身
+        '''
         # load model from file if the model and feature file exists
-        if is_load_from_file and is_exist_file(dir_path, model_name) and is_exist_file(dir_path, select_feature_name):
-            return self.load_model(model_name)
+        if is_load_from_file and is_exist_file(dir_path, model_file_name) and is_exist_file(dir_path, select_feature_file_name):
+            return self.load_model(model_file_name)
 
         # 训练前预处理，获取训练特征
         selected_features, train_features = fit_preprocess(train_data=train_data, n=n, is_need_cut=is_need_cut,
-                                             is_load_from_file=is_load_from_file, train_feature_name=train_feature_name)
+                                             is_load_from_file=is_load_from_file, train_feature_file_name=train_feature_file_name)
         self.selected_features = selected_features
 
         # training model through scikit-learn interface
@@ -41,11 +51,17 @@ class Message_Classcifier(object):
         print "iteration: %d" % self.classifier._clf.n_iter_
 
         # save model
-        if is_load_from_file: dump_to_pickle(dir_path, model_name, self.classifier)
+        if is_load_from_file: dump_to_pickle(dir_path, model_file_name, self.classifier)
         return self
 
 
     def predict(self, test_x, is_need_cut=True):
+        '''
+        预测
+        :param test_x: 预测数据
+        :param is_need_cut: 是否需要分词处理
+        :return: 分类结果
+        '''
         if isinstance(test_x, basestring): test_x = [test_x]
         test_messages =  cut_messages(test_x, is_load_from_file=False) if is_need_cut else test_x
         test_features = word2vec(test_messages, self.selected_features, is_test_mode=True) # word to vec
@@ -61,12 +77,13 @@ def cross_validate_score(data, k_fold=5, model=LogisticRegression()):
     clf = Message_Classcifier()
     kf = StratifiedKFold(n_splits=k_fold, shuffle=True, random_state=1)#固定种子
     result = []
-    for i, (train_index, validate_index) in enumerate(kf.split(data_x, data_y)):  # split data according to label balances
+    # split data according to label balances
+    for i, (train_index, validate_index) in enumerate(kf.split(data_x, data_y)):
         print 'fold %d start......' % i
         train_data = data.ix[train_index] # 包含标签
         validate_x = data_x.ix[validate_index] # 不包含标签
         validate_y = data_y.ix[validate_index]
-        clf.fit(train_data, model, n=1000, is_load_from_file=False, is_need_cut=False, train_feature_name='train_fold_%d_features'%i)
+        clf.fit(train_data, model, n=1000, is_load_from_file=False, is_need_cut=False, train_feature_file_name='train_fold_%d_features'%i)
         pred_y = clf.predict(validate_x, is_need_cut=False)
         result.append(acc_precision_recall_score(validate_y, pred_y))
     print 'average score over %d fold cross data' % k_fold
@@ -75,32 +92,33 @@ def cross_validate_score(data, k_fold=5, model=LogisticRegression()):
     print result
     return result[-1] # f1_score of neg class
 
-def learning_curve(data, model, classifier_name, n, is_need_cut=False, is_load_from_file=False, train_feature_name=all_train_features_name,
+def learning_curve(data, model, classifier_name, n, is_need_cut=False, is_load_from_file=False, train_feature_file_name=all_train_features_name,
                    cv=5, train_sizes=np.linspace(.1, 1.0, 10), ylim=(0.8, 1.1), baseline=0.9):
+    '''绘制学习曲线'''
     _, data_features = fit_preprocess(train_data=data, is_need_cut=is_need_cut, n=n,
-                                        is_load_from_file=is_load_from_file, train_feature_name=train_feature_name)
+                                        is_load_from_file=is_load_from_file, train_feature_file_name=train_feature_file_name)
     X, y = transform_features(data_features)
     plot_learning_curve(model, classifier_name, X=X, y=y, ylim=ylim, cv=cv,
                         train_sizes=train_sizes, baseline=baseline)
 
-def adjust_parameter_validate_curve(data, model, model_name,
-                                    n=1000, is_need_cut=False, is_load_from_file=False, train_feature_name=all_train_features_name, cv=5,):
+def adjust_parameter_validate_curve(data, model, model_file_name,
+                                    n=1000, is_need_cut=False, is_load_from_file=False, train_feature_file_name=all_train_features_name, cv=5,):
+    '''调参'''
     _, data_features = fit_preprocess(train_data=data, is_need_cut=is_need_cut, n=n,
-                                      is_load_from_file=is_load_from_file, train_feature_name=train_feature_name)
+                                      is_load_from_file=is_load_from_file, train_feature_file_name=train_feature_file_name)
     X, y = transform_features(data_features)
-
     param_name = 'class_weight'
     param_plot_range = np.arange(1, 2.1, 0.1)
     param_range = [{pos:1.0, neg:neg_class_weight} for neg_class_weight in param_plot_range]
-    plot_validation_curve(model, model_name, X=X, y=y, param_name=param_name, param_range=param_range, param_plot_range=param_plot_range,
+    return plot_validation_curve(model, model_file_name, X=X, y=y, param_name=param_name, param_range=param_range, param_plot_range=param_plot_range,
                           cv=cv)
 
 
-def train_all_and_predict_no_label_data(data):
-    print 'cut finished.........................'
+def train_all_and_predict_no_label_data(data, model):
+    '''在所有数据上进行训练'''
     clf = Message_Classcifier()
-    clf.fit(data, LogisticRegression(class_weight={pos: 0.5, neg: 0.8}), n=1000, is_load_from_file=False,
-            is_need_cut=False, train_feature_name=all_train_features_name)
+    clf.fit(data, model, n=1000, is_load_from_file=False,
+            is_need_cut=False, train_feature_file_name=all_train_features_name)
     to_predict_data = pd.read_csv(no_label_short_message_path, names=[message_name], sep='\t')
     print "to predict data length:", len(to_predict_data)
     pred_y = clf.predict(to_predict_data[message_name])
@@ -109,9 +127,9 @@ def train_all_and_predict_no_label_data(data):
 
 
 def precision_recall_curve(data, model,
-                                    n=1000, is_need_cut=False, is_load_from_file=False, train_feature_name=all_train_features_name, cv=5):
+                                    n=1000, is_need_cut=False, is_load_from_file=False, train_feature_file_name=all_train_features_name, cv=5):
     _, data_features = fit_preprocess(train_data=data, is_need_cut=is_need_cut, n=n,
-                                      is_load_from_file=is_load_from_file, train_feature_name=train_feature_name)
+                                      is_load_from_file=is_load_from_file, train_feature_file_name=train_feature_file_name)
     X, y = transform_features(data_features)
     plot_precision_recall_curve(model, X, y)
 
@@ -120,21 +138,21 @@ if __name__ == '__main__':
     data = pd.read_csv(short_message_path, names=[label_name, message_name], sep='\t')
     data[message_name] = cut_messages(data[message_name], is_load_from_file=True, name=all_word_cut_name)  # 统一切词
 
-    # 交叉验证
-    cross_validate_score(data, k_fold=5, model=LogisticRegression(class_weight={pos:1, neg:1.7}))
-
+    # 调参
+    best_neg_class_weight = adjust_parameter_validate_curve(data, LogisticRegression(), 'LogisticRegression Validation')
+    print best_neg_class_weight
 
     # 交叉验证绘制学习曲线
-    # learning_curve(data, LogisticRegression(class_weight={pos:1, neg:1.5}), 'LogisticRegression',n=1000,
-    #                          train_sizes=np.linspace(.01, 1.0, 10))
+    #learning_curve(data, LogisticRegression(class_weight={pos: 1, neg: best_neg_class_weight}),
+    #               'LogisticRegression', n=1000, train_sizes=np.linspace(.01, 1.0, 10))
 
     # 绘制precision_recall曲线
-    # precision_recall_curve(data, LogisticRegression(class_weight={pos: 1, neg: 1.7}))
+    #precision_recall_curve(data, LogisticRegression(class_weight={pos: 1, neg: best_neg_class_weight}))
+
+
+    # 交叉验证，输出评价指标结果
+    cross_validate_score(data, k_fold=5, model=LogisticRegression(class_weight={pos:1, neg:best_neg_class_weight}))
 
     # 最终在所有训练集上训练，并预测不带标签数据
-    # train_all_and_predict_no_label_data(data)
-
-    # 调参
-    # adjust_parameter_validate_curve(data, LogisticRegression(), 'LogisticRegression Validation')
-
+    #train_all_and_predict_no_label_data(data, model=LogisticRegression(class_weight={pos:1, neg:best_neg_class_weight}))
 

@@ -27,8 +27,8 @@ def cut_messages(messages, name=None, is_load_from_file=True):
 
 
 def word2vec(messages, selected_features, tag = None, is_test_mode=False, tol=1):
-    print 'begin word2vec...'
-    starttime = datetime.datetime.now()
+    #print 'begin word2vec...'
+    #starttime = datetime.datetime.now()
     vec = []
     features = selected_features.keys()
     for message in messages:
@@ -41,9 +41,9 @@ def word2vec(messages, selected_features, tag = None, is_test_mode=False, tol=1)
         elif len(a) >= tol: #训练模式，贴标签。如果该条短信能够提取到有用特征大于阈值tol，则加入训练
             vec.append([a, tag])
 
-    endtime = datetime.datetime.now()
-    print (endtime - starttime).seconds
-    print 'finish word2vec.....'
+    #endtime = datetime.datetime.now()
+    #print (endtime - starttime).seconds
+    #print 'finish word2vec.....'
     return vec
 
 def construct_vsm_train_features(pos_messages, neg_messages, selected_features, name=None):
@@ -56,7 +56,7 @@ def construct_vsm_train_features(pos_messages, neg_messages, selected_features, 
     return train_features
 
 
-def fit_preprocess(train_data, n, is_need_cut, is_load_from_file, train_feature_name):
+def fit_preprocess(train_data, n, is_need_cut, is_load_from_file, train_feature_file_name):
     '''训练前预处理，包括特征提取和特征表示'''
     # cut or not
     if is_need_cut: train_data[message_name] = cut_messages(train_data[message_name], all_word_cut_name, is_load_from_file)
@@ -65,7 +65,7 @@ def fit_preprocess(train_data, n, is_need_cut, is_load_from_file, train_feature_
     # Feature Selection by Chi-square Test Method
     selected_features = chi_features(n, pos_messages, neg_messages)
     # Construct Train features
-    train_features = construct_vsm_train_features(pos_messages, neg_messages, selected_features, name=train_feature_name)
+    train_features = construct_vsm_train_features(pos_messages, neg_messages, selected_features, name=train_feature_file_name)
     return selected_features, train_features
 
 def transform_features(data_features):
