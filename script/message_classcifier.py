@@ -119,16 +119,16 @@ def adjust_parameter_validate_curve(data, model, model_file_name,
                           cv=cv)
 
 
-def train_all_and_predict_no_label_data(data, model):
+def train_all_and_predict_no_label_data(data, model, n=1000):
     '''在所有数据上进行训练'''
     clf = Message_Classcifier()
-    clf.fit(data, model, n=1000, is_load_from_file=True,
-            is_need_cut=False, train_feature_file_name=all_train_features_name)
-    to_predict_data = pd.read_csv(no_label_short_message_path, names=[message_name], sep='\t')
-    print "to predict data length:", len(to_predict_data)
-    pred_y = clf.predict(to_predict_data[message_name])
-    to_predict_data[pred_label_name] = pred_y
-    to_predict_data.to_csv(no_label_short_message_pred_result_path, sep='\t', index=False, header=None)
+    clf.fit(data, model, n=n, is_load_from_file=True,
+            is_need_cut=False, train_feature_file_name= all_train_features_name)
+    # to_predict_data = pd.read_csv(no_label_short_message_path, names=[message_name], sep='\t')
+    # print "to predict data length:", len(to_predict_data)
+    # pred_y = clf.predict(to_predict_data[message_name])
+    # to_predict_data[pred_label_name] = pred_y
+    # to_predict_data.to_csv(no_label_short_message_pred_result_path, sep='\t', index=False, header=None)
 
 
 def precision_recall_curve(data, model,
@@ -173,6 +173,6 @@ if __name__ == '__main__':
     #cross_validate_score(data, k_fold=5, model=LogisticRegression(class_weight={pos:1, neg:best_neg_class_weight}))
 
     # 最终在所有训练集上训练，并预测不带标签数据
-    # train_all_and_predict_no_label_data(data, model=LogisticRegression(class_weight={pos:1, neg:best_neg_class_weight}))
+    train_all_and_predict_no_label_data(data, model=LogisticRegression(class_weight={pos:1, neg:best_neg_class_weight}))
 
-    compare_models(data)
+    #compare_models(data)

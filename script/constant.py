@@ -16,7 +16,7 @@ pos, neg = 0, 1
 label_name = 'label'
 message_name = 'message'
 pred_label_name = 'pred_label'
-all_train_features_name = 'all_train_features'
+all_train_features_name = 'all_train_features_200'
 
 # file name
 
