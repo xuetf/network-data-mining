@@ -14,7 +14,7 @@ def acc_precision_recall_score(label_true, label_pred):
     neg_f1score = f1_score(label_true, label_pred, pos_label=neg)
 
     # prints metrics to show how well the feature selection did
-    print 'fold validation: precision,recall,f1_score of pos and neg class................'
+    #print 'fold validation: precision,recall,f1_score of pos and neg class................'
     # print 'accuracy:', all_accuracy,
     # print 'pos precision:', pos_precision,
     # print 'pos recall:', pos_recall,
@@ -24,6 +24,6 @@ def acc_precision_recall_score(label_true, label_pred):
     # print 'neg f1 score', neg_f1score
 
     # 再次验证
-    print precision_recall_fscore_support(label_true, label_pred, pos_label=pos)
+    #print precision_recall_fscore_support(label_true, label_pred, pos_label=pos)
     return all_accuracy, pos_precision, pos_recall, pos_f1score, neg_precision, neg_recall, neg_f1score
 

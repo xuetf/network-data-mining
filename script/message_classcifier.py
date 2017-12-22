@@ -5,6 +5,12 @@ from nltk.classify.scikitlearn import SklearnClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import StratifiedKFold
 from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.linear_model import Perceptron
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn import svm
+from sklearn.naive_bayes import GaussianNB
+from sklearn.svm import LinearSVC
 import warnings
 warnings.filterwarnings("ignore")
 from visualizer import *
@@ -23,7 +29,7 @@ class Message_Classcifier(object):
         return self
 
     def fit(self, train_data, classifier, n=250, is_load_from_file=False,
-            model_file_name=None, select_feature_file_name=chi_feature_name, is_need_cut=True, train_feature_file_name=None):
+            model_file_name='final_model', select_feature_file_name=chi_feature_name, is_need_cut=True, train_feature_file_name=None):
         '''
         :param train_data:  训练数据，包含标签
         :param classifier:  使用的分类模型
@@ -48,7 +54,6 @@ class Message_Classcifier(object):
         print 'begin training, %d instances......' % (len(train_features))
         self.classifier = SklearnClassifier(classifier)  # nltk with scikit-learn interface inside
         self.classifier.train(train_features)  # train_features include text feature and labels
-        print "iteration: %d" % self.classifier._clf.n_iter_
 
         # save model
         if is_load_from_file: dump_to_pickle(dir_path, model_file_name, self.classifier)
@@ -117,7 +122,7 @@ def adjust_parameter_validate_curve(data, model, model_file_name,
 def train_all_and_predict_no_label_data(data, model):
     '''在所有数据上进行训练'''
     clf = Message_Classcifier()
-    clf.fit(data, model, n=1000, is_load_from_file=False,
+    clf.fit(data, model, n=1000, is_load_from_file=True,
             is_need_cut=False, train_feature_file_name=all_train_features_name)
     to_predict_data = pd.read_csv(no_label_short_message_path, names=[message_name], sep='\t')
     print "to predict data length:", len(to_predict_data)
@@ -134,25 +139,41 @@ def precision_recall_curve(data, model,
     plot_precision_recall_curve(model, X, y)
 
 
+def compare_models(data):
+    models= {"logisticRegression": LogisticRegression(class_weight={pos:1, neg:best_neg_class_weight}),
+            "Perceptron":Perceptron(),
+            "DecisionTree":DecisionTreeClassifier(),
+            "GBDT":GradientBoostingClassifier(),
+            "KNN": KNeighborsClassifier(n_neighbors=5),
+            "Bayes": GaussianNB(),
+            "SVC": svm.SVC()
+            }
+    for name in models:
+        print name, " begin..."
+        cross_validate_score(data, k_fold=5, model=models[name])
+
+
+
 if __name__ == '__main__':
     data = pd.read_csv(short_message_path, names=[label_name, message_name], sep='\t')
     data[message_name] = cut_messages(data[message_name], is_load_from_file=True, name=all_word_cut_name)  # 统一切词
 
     # 调参
-    best_neg_class_weight = adjust_parameter_validate_curve(data, LogisticRegression(), 'LogisticRegression Validation')
-    print best_neg_class_weight
+    # best_neg_class_weight = adjust_parameter_validate_curve(data, LogisticRegression(), 'LogisticRegression Validation')
+    best_neg_class_weight = 1.4 # 最优参数
 
     # 交叉验证绘制学习曲线
-    #learning_curve(data, LogisticRegression(class_weight={pos: 1, neg: best_neg_class_weight}),
-    #               'LogisticRegression', n=1000, train_sizes=np.linspace(.01, 1.0, 10))
+    # learning_curve(data, LogisticRegression(class_weight={pos: 1, neg: best_neg_class_weight}),
+    #                'LogisticRegression', n=1000, train_sizes=np.linspace(.01, 1.0, 10))
 
     # 绘制precision_recall曲线
-    #precision_recall_curve(data, LogisticRegression(class_weight={pos: 1, neg: best_neg_class_weight}))
+    # precision_recall_curve(data, LogisticRegression(class_weight={pos: 1, neg: best_neg_class_weight}))
 
 
     # 交叉验证，输出评价指标结果
-    cross_validate_score(data, k_fold=5, model=LogisticRegression(class_weight={pos:1, neg:best_neg_class_weight}))
+    #cross_validate_score(data, k_fold=5, model=LogisticRegression(class_weight={pos:1, neg:best_neg_class_weight}))
 
     # 最终在所有训练集上训练，并预测不带标签数据
-    #train_all_and_predict_no_label_data(data, model=LogisticRegression(class_weight={pos:1, neg:best_neg_class_weight}))
+    # train_all_and_predict_no_label_data(data, model=LogisticRegression(class_weight={pos:1, neg:best_neg_class_weight}))
 
+    compare_models(data)

@@ -28,7 +28,7 @@ def plot_word_cloud(best_words):
 # plot_word_cloud({u'你好':100, u'我们':200,u'啊啊':30})
 
 def plot_learning_curve(estimator, title, X, y, ylim=None, cv=None,
-                        train_sizes=np.linspace(.1, 1.0, 5), baseline=None, scoring='f1'):
+                        train_sizes=np.linspace(.1, 1.0, 10), baseline=None, scoring='f1'):
     """
     Generate a simple plot of the test and traning learning curve.
     Parameters
@@ -142,3 +142,30 @@ def plot_precision_recall_curve(classifier, X, y):
     plt.title('Precision-Recall curve of neg message')
     plt.show()
 
+
+def plot_compare_learning_curve(estimators, title, X, y, ylim=(0.7, 1.1), cv=5,
+                        train_sizes=np.linspace(.1, 1.0, 5), baseline=0.9, scoring='f1'):
+    X, y = shuffle(X, y)  # important for logistic because of the parallel modeling
+    plt.figure()
+
+    for name in estimators:
+        print name, 'begin...'
+        estimator = estimators[name]
+        train_sizes, train_scores, test_scores = learning_curve(
+            estimator, X, y, cv=cv, train_sizes=train_sizes, scoring=scoring, n_jobs=1)  # 垃圾短信neg=1的f1 score
+        test_scores_mean = np.mean(test_scores, axis=1)
+        plt.plot(train_sizes, test_scores_mean, 'o-', color="b",
+             label=name)
+
+
+    if baseline:
+        plt.axhline(y=baseline, color='red', linewidth=5, label='Desired Performance')  # baseline
+    plt.xlabel("Training examples")
+    plt.ylabel("Cross-Validation %s Score" % scoring)
+    plt.legend(loc="best")
+    plt.grid("on")
+
+    if ylim:
+        plt.ylim(ylim)
+    plt.title(title)
+    plt.show()
