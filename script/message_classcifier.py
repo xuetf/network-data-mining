@@ -75,7 +75,7 @@ class Message_Classcifier(object):
 
 
 
-def cross_validate_score(data, k_fold=5, model=LogisticRegression()):
+def cross_validate_score(data, k_fold=5, model=LogisticRegression(), n=1000):
     # load data and cut word
     data_x, data_y = data[message_name], data[label_name]
     # split data into k fold
@@ -88,7 +88,7 @@ def cross_validate_score(data, k_fold=5, model=LogisticRegression()):
         train_data = data.ix[train_index] # 包含标签
         validate_x = data_x.ix[validate_index] # 不包含标签
         validate_y = data_y.ix[validate_index]
-        clf.fit(train_data, model, n=1000, is_load_from_file=False, is_need_cut=False, train_feature_file_name='train_fold_%d_features'%i)
+        clf.fit(train_data, model, n=n, is_load_from_file=False, is_need_cut=False, train_feature_file_name='train_fold_%d_features_%d'%(i,n))
         pred_y = clf.predict(validate_x, is_need_cut=False)
         result.append(acc_precision_recall_score(validate_y, pred_y))
     print 'average score over %d fold cross data' % k_fold
@@ -144,13 +144,12 @@ def compare_models(data):
             "Perceptron":Perceptron(),
             "DecisionTree":DecisionTreeClassifier(),
             "GBDT":GradientBoostingClassifier(),
-            "KNN": KNeighborsClassifier(n_neighbors=5),
-            "Bayes": GaussianNB(),
-            "SVC": svm.SVC()
+            "Bayes": GaussianNB()
+            #"SVC": svm.SVC()
             }
     for name in models:
         print name, " begin..."
-        cross_validate_score(data, k_fold=5, model=models[name])
+        cross_validate_score(data, k_fold=5, model=models[name], n=200)
 
 
 
