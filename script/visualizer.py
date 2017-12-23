@@ -143,25 +143,26 @@ def plot_precision_recall_curve(classifier, X, y):
     plt.show()
 
 
-def plot_compare_learning_curve(estimators, title, X, y, ylim=(0.7, 1.1), cv=5,
+def plot_compare_learning_curve(estimators, X, y, title="Compare Learning curve of Different Model", ylim=(0.7, 1.1), cv=5,
                         train_sizes=np.linspace(.1, 1.0, 5), baseline=0.9, scoring='f1'):
     X, y = shuffle(X, y)  # important for logistic because of the parallel modeling
     plt.figure()
-
+    colors = np.array(['r', 'b', 'k', 'g', 'm'])
+    i = 0
     for name in estimators:
         print name, 'begin...'
         estimator = estimators[name]
         train_sizes, train_scores, test_scores = learning_curve(
             estimator, X, y, cv=cv, train_sizes=train_sizes, scoring=scoring, n_jobs=1)  # 垃圾短信neg=1的f1 score
         test_scores_mean = np.mean(test_scores, axis=1)
-        plt.plot(train_sizes, test_scores_mean, 'o-', color="b",
+        plt.plot(train_sizes, test_scores_mean, 'o-', color=colors[i],
              label=name)
-
+        i+=1
 
     if baseline:
         plt.axhline(y=baseline, color='red', linewidth=5, label='Desired Performance')  # baseline
     plt.xlabel("Training examples")
-    plt.ylabel("Cross-Validation %s Score" % scoring)
+    plt.ylabel("Cross-Validation %s Score of Spam Message" % scoring)
     plt.legend(loc="best")
     plt.grid("on")
 

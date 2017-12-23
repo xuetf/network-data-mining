@@ -140,17 +140,22 @@ def precision_recall_curve(data, model,
 
 
 def compare_models(data):
-    models= {"logisticRegression": LogisticRegression(class_weight={pos:1, neg:best_neg_class_weight}),
+    '''对比模型'''
+    models= {"logisticRegression": LogisticRegression(class_weight={pos:1, neg:1.4}),
             "Perceptron":Perceptron(),
             "DecisionTree":DecisionTreeClassifier(),
             "GBDT":GradientBoostingClassifier(),
-            "Bayes": GaussianNB()
-            #"SVC": svm.SVC()
+             "SVC":svm.LinearSVC()
             }
     for name in models:
-        print name, " begin..."
-        cross_validate_score(data, k_fold=5, model=models[name], n=200)
+         print name, " begin..."
+         cross_validate_score(data, k_fold=5, model=models[name], n=1000)
 
+    _, data_features = fit_preprocess(train_data=data, is_need_cut=False, n=200,
+                                      is_load_from_file=False,
+                                      train_feature_file_name=all_train_features_name)
+    X, y = transform_features(data_features)
+    plot_compare_learning_curve(models, X, y)
 
 
 if __name__ == '__main__':
@@ -162,8 +167,6 @@ if __name__ == '__main__':
     best_neg_class_weight = 1.4 # 最优参数
 
     # 交叉验证绘制学习曲线
-    # learning_curve(data, LogisticRegression(class_weight={pos: 1, neg: best_neg_class_weight}),
-    #                'LogisticRegression', n=1000, train_sizes=np.linspace(.01, 1.0, 10))
 
     # 绘制precision_recall曲线
     # precision_recall_curve(data, LogisticRegression(class_weight={pos: 1, neg: best_neg_class_weight}))
@@ -173,6 +176,7 @@ if __name__ == '__main__':
     #cross_validate_score(data, k_fold=5, model=LogisticRegression(class_weight={pos:1, neg:best_neg_class_weight}))
 
     # 最终在所有训练集上训练，并预测不带标签数据
-    train_all_and_predict_no_label_data(data, model=LogisticRegression(class_weight={pos:1, neg:best_neg_class_weight}))
+    #train_all_and_predict_no_label_data(data, model=LogisticRegression(class_weight={pos:1, neg:best_neg_class_weight}))
 
-    #compare_models(data)
+    # 对比实验：不同模型交叉验证/学习曲线
+    # compare_models(data)
