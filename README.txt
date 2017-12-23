@@ -1,46 +1,28 @@
-类说明：
-message_classcifier.py: 短信分类总的运行主类
-util.py:短信分类工具类：保存中间数据的方法
+README:
+运行环境：python2.7 Anaconda2
+依赖包：见requirements文件
 
-news_recommend.ipynb:新闻推荐。ipython notebook格式，只实现了新闻相似度计算，
-使用的是gensim包，并基于Item-Item方式给出单个用户推荐。这里面处理起来细节好多，计算量太大。
-评价指标还没有构建。坑太多。最终结果不一定好。
+main_model：最终最优的模型以及特征处理方法
+  - constant.py: 存放全局变量，包括一些常量的定义。 如果运行发现文件找不到，请修改里面的全局变量data_root_path
+  - feature_processer.py: 特征预处理和特征表示
+  - feature_extraction.py: 特征抽取
+  - message_classcifier.py: 模型类，包括模型的训练与预测/模型的对比/模型可视化，如学习曲线，PR曲线，交叉验证参数选择等。
+  - main.py: 测试类。调参、交叉验证、学习曲线、PR曲线、模型对比试验（不同的模型交叉验证性能与学习曲线绘制）
+  - score.py: 评价类，f1,recall,precision,accuracy
+  - util.py: 模型保存和加载、中间数据/特征等的保存和加载
+  - visiualizer.py: 可视化。文本特征词云可视化/学习曲线等可视化
 
 
 
+compare_model: 实验过程的中的对比模型和特征抽取方法
+  - 决策树模型实验、朴素贝叶斯模型实验等。
+  - IG信息增益特征抽取等
+
+data:
+   - save文件夹：模型中间结果
+   - stop.txt:停用词典
+   - 其余：请将训练数据和预测数据拷贝到data文件夹，并在main_model/constant.py常量定义中修改相应的文件名称
+
+output文件夹：存放可视化结果
 
 
-data文件夹：
-
-short_message.txt:老师给的带标签短信训练数据
-no_label_short_message.txt:老师给的无标签短信测试集数据
-no_label_short_message.pred_result.txt:模型对无标签短信的预测结果
-save文件夹：保存中间过程数据。若数据有误，请删除重新跑模型
-
-五折交叉验证结果：
- accuracy | pos: precision, recall,  f1_score | neg: precision, recall,    f1_score
-[ 0.99163137  0.99269145  0.99804965  0.99536333  0.98154793  0.93386154   0.95711039]
-
-短信分类运行结果：
-D:\Anaconda2\python.exe F:/py-workspace/network-data-mining/message_classcifier.py
-LogisticRegression:..........
-train on 322880 instances
-Building prefix dict from the default dictionary ...
-Loading model from cache c:\users\xtf\appdata\local\temp\jieba.cache
-Loading model cost 0.932 seconds.
-Prefix dict has been built succesfully.
-test on 188712 instances
-metric from scikit learn................
-accuracy: 0.991966594599
-pos precision: 0.992849948468
-pos recall: 0.998263091579
-neg precision: 0.983559964333
-neg recall: 0.935294117647
-pos f1 score 0.995549161798
-neg f1 score 0.958820014125
-
-(array([ 0.99284995,  0.98355996]), array([ 0.99826309,  0.93529412]), array([ 0.99554916,  0.95882001]), array([169842,  18870], dtype=int64))
-to predict data length: 197030
-test on 197030 instances
-
-Process finished with exit code 0
