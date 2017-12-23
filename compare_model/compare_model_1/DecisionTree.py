@@ -1,73 +1,74 @@
+#-*- coding: utf-8 -*-
 from math import log
-file = open("/Users/iEric/Downloads/txt/training_result.txt")
-featurefile = open("/Users/iEric/Downloads/txt/feature0.txt")
-fline = featurefile.readlines()
-featurefile.close()
-line = file.readlines()
-file.close()
 class Node(object):
-    def __init__(self, word, Child0, Child1, flag ):
+    def __init__(self, word, Child0, Child1, flag ,code):
         self.word=word
         self.Child0=Child0
         self.Child1=Child1
         self.flag=flag
+        self.code=code
     def setChild0(self, Child0):
-        self.Child0=Child0
+        if Child0!=None:
+            self.Child0=Child0
+        else:
+            self.Child0=None
     def setChild1(self, Child1):
-        self.Child1=Child1
+        if Child1!=None:
+            self.Child1=Child1
+        else:
+            self.Child1=None
     def setFlag(self, flag):
         self.flag=flag
+    def setCode(self, code):
+        self.code=code
+    def makeCode(self):
+        if self.Child0!=None:
+            self.Child0.setCode(self.code+"0")
+            self.Child0.makeCode()
+        if self.Child1!=None:
+            self.Child1.setCode(self.code+"1")
+            self.Child1.makeCode()
+    def writetree(self,fileName):
+        file = open(fileName,'a')
+        file.write(self.word+","+str(self.flag)+","+self.code+"|")
+        file.close()
+        if self.Child1!=None:
+            self.Child1.writetree(fileName)
+        if self.Child0!=None:
+            self.Child0.writetree(fileName)
     def OutPut(self):
-        
         print(self.word+" "+str(self.flag))
         if self.Child1!=None:
             self.Child1.OutPut()
         if self.Child0!=None:
             self.Child0.OutPut()
-    
-    def writeTreeFromPreorder(self, fileName):
-        file = open(fileName,'a')
-        file.write(self.word+","+str(self.flag)+"|")
-        file.close()
-        if self.Child1!=None:
-            self.Child1.writeTreeFromPreorder(fileName)
-        if self.Child0!=None:
-            self.Child0.writeTreeFromPreorder(fileName)
-    def writeTreeFromInorder(self, fileName):
-        if self.Child1!=None:
-            self.Child1.writeTreeFromInorder(fileName)
-        file = open(fileName,'a')
-        file.write(self.word+","+str(self.flag)+"|")
-        file.close()
-        if self.Child0!=None:
-            self.Child0.writeTreeFromInorder(fileName)
 
-def makeListFromFile(fileNameFisrt,fileNameIn):
-    prefile=open(fileNameFisrt)
-    preorderstr=prefile.readline()
-    prefile.close()
-    infile=open(fileNameIn)
-    inorderstr=infile.readline()
-    infile.close()
-    preList=preorderstr.split("|")
-    inList=inorderstr.split("|")
-    preList.pop()
-    inList.pop()
-    return(preList,inList)
-def buildTreeFromList(preList,i,inList,low,high):
-    if i >= len(preList):
+
+def makeListFromFile(fileName):
+    file=open(fileName)
+    s=file.readline()
+    file.close()
+    strList=s.split("|")
+    strList.pop()
+    return strList
+def buildTreeFromFile(fileName):
+    strList=makeListFromFile(fileName)
+    return buildTree(strList,1,"0")
+def buildTree(strList,num,code):
+    node=Node("",None,None,0,"0")
+    i=0
+    for i in range(len(strList)):
+        List=strList[i].split(",")
+        l=len(List[2])
+        if (len(List[2])==num)&(List[2]==code):
+            node =Node(List[0],None,None,int(List[1]),List[2])
+            break
+    if i==len(strList)-1:
         return None
-    root=Node(preList[i][:len(preList[i])-2],None,None,int(preList[i][len(preList[i])-1]))
-    j=0
-    for j in range(low,high+1,1):
-        if(preList[i]==inList[j]):
-            break;
-    leftTree=buildTreeFromList(preList,i+1,inList,low,j-1)
-    rightTree=buildTreeFromList(preList,(i+j-low+len(preList)),inList,j+1,high)
-    root.setChild1(leftTree)
-    root.setChild0(rightTree)
-    return root
-
+    else:
+        node.setChild0(buildTree(strList,num+1,node.code+"0"))
+        node.setChild1(buildTree(strList,num+1,node.code+"1"))
+        return node
 def findDivideFeature(fline,line):
     word=""
     temp=10000
@@ -150,9 +151,9 @@ def makeDecisionTreeNode(fline,line):
             break
     node =None
     if A[0]!="" :
-        node=Node(A[0],None,None,flag)
+        node=Node(A[0],None,None,flag,"0")
     else:
-        node=Node("",None,None,compareSum(line))
+        node=Node("",None,None,compareSum(line),"0")
     line1=A[2]
     line0=A[3]
     fline0=deletefeature(A[0],A[1],fline)
@@ -173,7 +174,7 @@ def makeDecisionTree(fline,line):
     if len(line)==0 :
         return None
     if len(fline)==0 :
-        return Node("",None,None,compareSum(line))
+        return Node("",None,None,compareSum(line),"0")
     A = makeDecisionTreeNode(fline,line)
     node = A[0]
     if node==None :
@@ -194,9 +195,11 @@ def divideline(teststr,node):
     if (teststr[1:].find(node.word)!=-1):
         if(node.Child1!=None):
             return divideline(teststr,node.Child1)
+        return 1
     if (teststr[1:].find(node.word)==-1):
         if(node.Child0!=None):
             return divideline(teststr,node.Child0)
+        return 0
 def calculateAccuracy(testline,teststr):
     count=0
     for i in range(len(testline)):
@@ -207,26 +210,26 @@ def calculatePrecision(testline,teststr):
     count=0
     sum=0
     for i in range(len(testline)):
-        if (testline[i][:1]==teststr[i]) & (teststr[i]=="1"):
+        if (testline[i][:1]==teststr[i]) & (teststr[i]=="0"):
             count=count+1
-        if teststr[i]=="1":
+        if teststr[i]=="0":
             sum=sum+1
     return float(count)/float(sum)
 def calculateRecall(testline,teststr):
     count=0
     sum=0
     for i in range(len(testline)):
-        if (testline[i][:1]==teststr[i]) & (teststr[i]=="1"):
+        if (testline[i][:1]==teststr[i]) & (teststr[i]=="0"):
             count=count+1
-        if testline[i][:1]=="1":
+        if testline[i][:1]=="0":
             sum=sum+1
     return float(count)/float(sum)
 def calculateF1(precision,recall):
     return 2*precision*recall/(precision+recall)
 
 
-def loadModel(FirstTree,InTree):
-    Tree=makeListFromFile(FirstTree,InTree)
+def loadModel(fileName):
+    Tree=buildTreeFromFile(fileName)
     return Tree
 def predict(wordList,Tree):
     strList=divide(wordList,Tree)
@@ -234,39 +237,12 @@ def predict(wordList,Tree):
 
 
 
-'''
-A=makeListFromFile("/Users/iEric/Downloads/txt/TreeF.txt","/Users/iEric/Downloads/txt/TreeI.txt")
-preList=A[0]
-inList=A[1]
-node = buildTreeFromList(preList,0,inList,0,len(preList)-1)
-node.OutPut()
-'''
+Tree=loadModel("Tree.txt")
+wordList=["您好,三八"]
+strList=predict(wordList,Tree)
 
+print(strList)
 
-
-tfile=open("/Users/iEric/Downloads/txt/testing_classify_result.txt")
-testline0 = tfile.readlines()
-num=0
-nonestr=testline0[1]
-testline=[]
-testList=[]
-for i in range(len(testline0)):
-    if testline0[i]!=nonestr:
-        testline.append(testline0[i])
-        testList.append(testline0[i][0])
-
-tfile.close()
-
-Tree=makeDecisionTree(fline,line)
-#Tree.OutPut()
-Tree.writeTreeFromPreorder("/Users/iEric/Downloads/txt/TreeF.txt")
-Tree.writeTreeFromInorder("/Users/iEric/Downloads/txt/TreeI.txt")
-strList=divide(testline,Tree)
-
-#writefile = open("/Users/iEric/Downloads/txt/test.txt",'w')
-#teststr=writefile.readline()
-#writefile.write(strList)
-#writefile.close()
 
 
 
