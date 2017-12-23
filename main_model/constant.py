@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 '''
-constant definition
+constant definitions
 '''
 data_root_path = '../data/'
 #  save path

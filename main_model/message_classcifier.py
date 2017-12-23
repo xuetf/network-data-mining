@@ -139,21 +139,3 @@ def precision_recall_curve(data, model,
     plot_precision_recall_curve(model, X, y)
 
 
-def compare_models(data):
-    '''对比模型'''
-    models= {"logisticRegression": LogisticRegression(class_weight={pos:1, neg:1.4}),
-            "Perceptron":Perceptron(),
-            "DecisionTree":DecisionTreeClassifier(),
-            "GBDT":GradientBoostingClassifier(),
-             "SVC":svm.LinearSVC()
-            }
-    for name in models:
-         print name, " begin..."
-         cross_validate_score(data, k_fold=5, model=models[name], n=1000)
-
-    _, data_features = fit_preprocess(train_data=data, is_need_cut=False, n=200,
-                                      is_load_from_file=False,
-                                      train_feature_file_name=all_train_features_name)
-    X, y = transform_features(data_features)
-    plot_compare_learning_curve(models, X, y)
-

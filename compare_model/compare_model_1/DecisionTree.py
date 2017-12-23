@@ -236,12 +236,11 @@ def predict(wordList,Tree):
     return strList
 
 
-
-Tree=loadModel("Tree.txt")
-wordList=["感谢致电杭州萧山全金釜韩国烧烤店，本店位于金城路xxx号，欢迎惠顾","苏州和无锡两地警方成功破获了一起劫持女车主的案件"]
-pred=predict(wordList,Tree)
-
-print(pred)
+if __name__ == '__main__':
+    Tree=loadModel("Tree.txt")
+    wordList=["感谢致电杭州萧山全金釜韩国烧烤店，本店位于金城路xxx号，欢迎惠顾","苏州和无锡两地警方成功破获了一起劫持女车主的案件"]
+    pred=predict(wordList,Tree)
+    print(pred)
 
 
 
