@@ -185,9 +185,9 @@ def makeDecisionTree(fline,line):
     node.setChild0(makeDecisionTree(A[1],A[3]))
     return node
 def divide(testline,node):
-    flagstr=""
+    flagstr=[]
     for i in range(len(testline)):
-        flagstr=flagstr+str(divideline(testline[i],node))
+        flagstr.append(divideline(testline[i],node))
     return flagstr
 def divideline(teststr,node):
     if (node.flag!=2):
@@ -238,10 +238,10 @@ def predict(wordList,Tree):
 
 
 Tree=loadModel("Tree.txt")
-wordList=["您好,三八"]
-strList=predict(wordList,Tree)
+wordList=["感谢致电杭州萧山全金釜韩国烧烤店，本店位于金城路xxx号，欢迎惠顾","苏州和无锡两地警方成功破获了一起劫持女车主的案件"]
+pred=predict(wordList,Tree)
 
-print(strList)
+print(pred)
 
 
 
