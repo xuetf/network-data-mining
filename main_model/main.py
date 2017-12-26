@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from message_classcifier import *
 
+
 def compare_models(data):
     '''对比模型, 使用不同模型进行交叉验证并绘制学习曲线'''
     models= {"logisticRegression": LogisticRegression(),
